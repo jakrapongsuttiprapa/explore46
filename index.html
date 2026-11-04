@@ -569,7 +569,12 @@ function renderForm() {
   let body = '', n = 1;
   if (s.g === 6) {
     const opt = '<small style="color:var(--muted);font-weight:400">(ไม่บังคับ)</small>';
-    body += qBox('q-status', n++, 'ตอนนี้นักเรียนติดมหาวิทยาลัยแล้วหรือยัง? <span class="req">*</span>', 'เลือก 1 ข้อ',
+    body += qBox('q-exams', 0, 'นักเรียนต้องไปสอบอะไรบ้าง? <span class="req">*</span>', 'เลือกได้มากกว่า 1 ข้อ',
+      optCards('exams', SV.m6.exams, true) +
+      sub('exams', 'TGAT/TPAT', '🧠 จะสอบ TGAT / TPAT ส่วนไหนบ้าง ' + opt, chips('tpat', SV.m6.tpat)) +
+      sub('exams', 'A-Level', '📚 จะสอบ A-Level วิชาอะไรบ้าง ' + opt, chips('alevel', SV.m6.alevel)) +
+      sub('exams', OTHER, '✍️ โปรดระบุการสอบอื่นๆ <span class="req">*</span>', field('otherText', 'เช่น สอบตรงคณะ…, โควตา…, สอบชิงทุน…, IELTS', 300, true)));
+    body += qBox('q-status', 0, 'ตอนนี้นักเรียนติดมหาวิทยาลัยแล้วหรือยัง? <span class="req">*</span>', 'เลือก 1 ข้อ',
       optCards('status', SV.m6.status, true, true) +
       sub('status', ADMIT, '🎉 ยินดีด้วย! ติดที่ไหน',
         `<div class="f-grid">
@@ -584,11 +589,6 @@ function renderForm() {
           ${lab('ที่ไหน', true, field('workplace', 'เช่น ร้าน/บริษัท…, เขต/จังหวัด…', 200))}
         </div>`));
     body += `<div class="qdep" data-dep="status" data-dep-v="${esc(WAIT)}">` +
-      qBox('q-exams', 0, 'นักเรียนจะสอบอะไรบ้าง? <span class="req">*</span>', 'เลือกได้มากกว่า 1 ข้อ',
-        optCards('exams', SV.m6.exams, true) +
-        sub('exams', 'TGAT/TPAT', '🧠 จะสอบ TGAT / TPAT ส่วนไหนบ้าง ' + opt, chips('tpat', SV.m6.tpat)) +
-        sub('exams', 'A-Level', '📚 จะสอบ A-Level วิชาอะไรบ้าง ' + opt, chips('alevel', SV.m6.alevel)) +
-        sub('exams', OTHER, '✍️ โปรดระบุการสอบอื่นๆ <span class="req">*</span>', field('otherText', 'เช่น สอบตรงคณะ…, โควตา…, สอบชิงทุน…, IELTS', 300, true))) +
       qBox('q-target', 0, 'คณะ / มหาวิทยาลัยที่ตั้งเป้าไว้', 'ไม่บังคับ — ถ้ายังไม่แน่ใจเว้นว่างได้', field('target', 'เช่น วิศวกรรมศาสตร์ มหาวิทยาลัย…', 200)) +
       `</div>`;
     body += qBox('q-career', 0, 'อาชีพที่นักเรียนอยากเป็นในอนาคต <span class="req">*</span>', 'พิมพ์เองหรือเลือกจากรายการ · ถ้ายังไม่แน่ใจ พิมพ์ “ยังไม่แน่ใจ”',
@@ -606,7 +606,7 @@ function renderForm() {
     `<input class="inp" id="sidInp" inputmode="numeric" maxlength="20" placeholder="รหัสนักเรียน" autocomplete="off">`);
 
   $('#v-form').innerHTML = `
-    <div class="page-head"><button class="back" data-back>← กลับ</button><div><h2>${s.g === 6 ? '🎯 แบบสำรวจการสอบ' : GRADE_META[s.g].icon + ' แบบสำรวจวิชาที่อยากเน้น'}</h2><div class="sub-t">ม.${s.g} · ตอบตามความจริงเพื่อประโยชน์ของนักเรียนเอง</div></div></div>
+    <div class="page-head"><button class="back" data-back>← กลับ</button><div><h2>${s.g === 6 ? '🎯 แบบสำรวจการศึกษาต่อ ม.6' : GRADE_META[s.g].icon + ' แบบสำรวจวิชาที่อยากเน้น'}</h2><div class="sub-t">ม.${s.g} · ตอบตามความจริงเพื่อประโยชน์ของนักเรียนเอง</div></div></div>
     <div class="stu-card glass"><div class="avatar xl">${esc(initial(s.name))}</div><div><div class="stu-name">${esc(s.name)}</div><div class="stu-meta">ชั้น ม.${s.g}/${s.r}${s.n ? ' · เลขที่ ' + esc(s.n) : ''}</div></div>
       ${s.d ? '<span class="chip ok">✓ เคยส่งแล้ว · ส่งใหม่เพื่อแก้ไข</span>' : ''}</div>
     ${s.d && cfg.requireId ? '<div class="note-banner">ℹ️ นักเรียนเคยส่งแล้ว การส่งครั้งนี้จะแทนที่คำตอบเดิม</div>' : ''}
@@ -646,6 +646,8 @@ function updateDeps() {
 function validate() {
   const A = S.answers, s = S.student;
   if (s.g === 6) {
+    if (!A.exams.length && A.status !== WORK) return { msg: 'กรุณาเลือกการสอบอย่างน้อย 1 รายการ', sel: '#q-exams' };
+    if (A.exams.includes(OTHER) && !A.otherText.trim()) return { msg: 'กรุณาระบุการสอบอื่นๆ', sel: '#q-exams' };
     if (!A.status) return { msg: 'กรุณาเลือกว่าติดมหาวิทยาลัยแล้วหรือยัง', sel: '#q-status' };
     if (A.status === ADMIT) {
       if (!A.uni.trim()) return { msg: 'กรุณากรอกชื่อมหาวิทยาลัยที่ติด', sel: '#q-status' };
@@ -654,9 +656,6 @@ function validate() {
     } else if (A.status === WORK) {
       if (!A.job.trim()) return { msg: 'กรุณาระบุงานที่จะทำ', sel: '#q-status' };
       if (!A.workplace.trim()) return { msg: 'กรุณาระบุสถานที่ทำงาน', sel: '#q-status' };
-    } else {
-      if (!A.exams.length) return { msg: 'กรุณาเลือกการสอบอย่างน้อย 1 รายการ', sel: '#q-exams' };
-      if (A.exams.includes(OTHER) && !A.otherText.trim()) return { msg: 'กรุณาระบุการสอบอื่นๆ', sel: '#q-exams' };
     }
     if (!A.career.trim()) return { msg: 'กรุณาระบุอาชีพที่อยากเป็น', sel: '#q-career' };
   } else {
@@ -693,6 +692,10 @@ function renderDone(res) {
   let sum = '';
   if (s.g === 6) {
     const stOpt = S.data.survey.m6.status.find(o => o.v === a.status);
+    sum += row('การสอบที่เลือก', tags(a.exams));
+    if (a.tpat && a.tpat.length) sum += row('TGAT / TPAT', tags(a.tpat));
+    if (a.alevel && a.alevel.length) sum += row('A-Level', tags(a.alevel));
+    if (a.otherText) sum += row('การสอบอื่นๆ', esc(a.otherText));
     sum += row('สถานะการศึกษาต่อ', tags([stOpt ? stOpt.t : a.status]));
     if (a.status === ADMIT) {
       sum += row('มหาวิทยาลัย', esc(a.uni));
@@ -701,12 +704,8 @@ function renderDone(res) {
     } else if (a.status === WORK) {
       sum += row('งานที่จะทำ', esc(a.job));
       sum += row('สถานที่ทำงาน', esc(a.workplace));
-    } else {
-      sum += row('การสอบที่เลือก', tags(a.exams));
-      if (a.tpat && a.tpat.length) sum += row('TGAT / TPAT', tags(a.tpat));
-      if (a.alevel && a.alevel.length) sum += row('A-Level', tags(a.alevel));
-      if (a.otherText) sum += row('การสอบอื่นๆ', esc(a.otherText));
-      if (a.target) sum += row('คณะ/มหาวิทยาลัยที่ตั้งเป้า', esc(a.target));
+    } else if (a.target) {
+      sum += row('คณะ/มหาวิทยาลัยที่ตั้งเป้า', esc(a.target));
     }
     sum += row('อาชีพที่อยากเป็น', esc(a.career));
   } else {
@@ -786,12 +785,12 @@ function renderReport() {
   const dt = new Date(R.generatedAt).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
   const tg = [4, 5, 6].filter(g => R.grades.some(G => G.g === g)).map(g => `<button class="tg ${S.repG.has(g) ? 'on' : ''}" data-tg="${g}">ม.${g}</button>`).join('');
 
-  let rate = `<table class="rt"><tr><th>ชั้น/ห้อง</th><th>นักเรียน</th><th>ตอบแล้ว</th><th>ยังไม่ตอบ</th><th>ร้อยละ</th><th style="width:28%"></th></tr>`;
+  let rate = `<div class="tbl-wrap"><table class="rt"><tr><th>ชั้น/ห้อง</th><th>นักเรียน</th><th>ตอบแล้ว</th><th>ยังไม่ตอบ</th><th>ร้อยละ</th><th style="width:28%"></th></tr>`;
   gs.forEach(G => {
     G.rooms.forEach(r => rate += `<tr><td>ม.${G.g}/${r.r}</td><td>${r.total}</td><td>${r.done}</td><td>${r.total - r.done}</td><td>${pct(r.done, r.total)}%</td><td><div class="mini-bar"><i style="width:${pct(r.done, r.total)}%"></i></div></td></tr>`);
     rate += `<tr class="tot"><td>รวม ม.${G.g}</td><td>${G.total}</td><td>${G.done}</td><td>${G.total - G.done}</td><td>${pct(G.done, G.total)}%</td><td><div class="mini-bar"><i style="width:${pct(G.done, G.total)}%"></i></div></td></tr>`;
   });
-  rate += `</table>`;
+  rate += `</table></div>`;
 
   let secs = '';
   gs.slice().sort((a, b) => b.g - a.g).forEach((G, gi) => {
