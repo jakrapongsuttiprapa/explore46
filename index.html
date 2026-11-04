@@ -172,6 +172,13 @@ input,textarea{font:inherit}
 .inp{width:100%;padding:15px 16px;border-radius:16px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);color:var(--text);outline:0;font-size:16px;transition:.2s;resize:vertical}
 .inp:focus{border-color:var(--pink);box-shadow:0 0 0 4px rgba(255,79,163,.15)}
 .inp::placeholder{color:#8f88b3}
+.f-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.fl{display:block}
+.fl>span{display:block;font-size:14px;font-weight:600;color:#d9d3f5;margin-bottom:7px}
+.qdep{display:none}
+.qdep.open{display:block;animation:viewIn .4s}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.opt.single .tick{border-radius:50%}
 .shake{animation:shake .5s}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .submit-bar{position:sticky;bottom:12px;z-index:10;display:flex;align-items:center;gap:14px;padding:12px 12px 12px 20px;margin-top:22px;border-radius:22px;background:rgba(20,10,46,.85);border:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow)}
@@ -278,6 +285,7 @@ table.rt tr.tot td{font-weight:700;background:#fdf2f8;-webkit-print-color-adjust
   .hb{grid-template-columns:1fr 84px}
   .hb .ht{grid-column:1/-1;order:3}
   .stu-list{grid-template-columns:1fr}
+  .f-grid{grid-template-columns:1fr}
   .submit-bar{padding:10px 10px 10px 16px}
   .btn{padding:13px 18px}
   .q{padding:18px}
@@ -342,7 +350,33 @@ const initial = n => (String(n).replace(PREFIX, '').trim().replace(/^[เแโ�
 const GRADE_META = {
   4: { icon: '🌱', title: 'มัธยมศึกษาปีที่ 4', sub: 'วิชาที่อยากเน้น และเน้นเพื่ออะไร', hue: 'c1' },
   5: { icon: '🚀', title: 'มัธยมศึกษาปีที่ 5', sub: 'วิชาที่อยากเน้น และเน้นเพื่ออะไร', hue: 'c2' },
-  6: { icon: '🎯', title: 'มัธยมศึกษาปีที่ 6', sub: 'สำรวจการสอบเข้ามหาวิทยาลัย', hue: 'c3' }
+  6: { icon: '🎯', title: 'มัธยมศึกษาปีที่ 6', sub: 'การศึกษาต่อ การสอบ และอาชีพในฝัน', hue: 'c3' }
+};
+const ADMIT = 'ติดแล้ว', WAIT = 'ยังไม่ติด', WORK = 'ไม่เรียนต่อ';
+/* รายการช่วยพิมพ์ (นักเรียนพิมพ์ชื่ออื่นที่ไม่มีในรายการได้) */
+const DL = {
+  uni: ['จุฬาลงกรณ์มหาวิทยาลัย', 'มหาวิทยาลัยธรรมศาสตร์', 'มหาวิทยาลัยมหิดล', 'มหาวิทยาลัยเกษตรศาสตร์', 'มหาวิทยาลัยศรีนครินทรวิโรฒ', 'มหาวิทยาลัยศิลปากร',
+    'สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง', 'มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี', 'มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ',
+    'มหาวิทยาลัยนวมินทราธิราช', 'มหาวิทยาลัยรามคำแหง', 'มหาวิทยาลัยสุโขทัยธรรมาธิราช', 'มหาวิทยาลัยเชียงใหม่', 'มหาวิทยาลัยขอนแก่น', 'มหาวิทยาลัยสงขลานครินทร์',
+    'มหาวิทยาลัยนเรศวร', 'มหาวิทยาลัยบูรพา', 'มหาวิทยาลัยแม่ฟ้าหลวง', 'มหาวิทยาลัยแม่โจ้', 'มหาวิทยาลัยพะเยา', 'มหาวิทยาลัยมหาสารคาม', 'มหาวิทยาลัยอุบลราชธานี',
+    'มหาวิทยาลัยเทคโนโลยีสุรนารี', 'มหาวิทยาลัยวลัยลักษณ์', 'มหาวิทยาลัยทักษิณ', 'มหาวิทยาลัยสวนดุสิต', 'มหาวิทยาลัยราชภัฏสวนสุนันทา', 'มหาวิทยาลัยราชภัฏจันทรเกษม',
+    'มหาวิทยาลัยราชภัฏบ้านสมเด็จเจ้าพระยา', 'มหาวิทยาลัยราชภัฏพระนคร', 'มหาวิทยาลัยราชภัฏธนบุรี', 'มหาวิทยาลัยเทคโนโลยีราชมงคลธัญบุรี', 'มหาวิทยาลัยเทคโนโลยีราชมงคลพระนคร',
+    'มหาวิทยาลัยเทคโนโลยีราชมงคลกรุงเทพ', 'มหาวิทยาลัยเทคโนโลยีราชมงคลรัตนโกสินทร์', 'มหาวิทยาลัยเทคโนโลยีราชมงคลสุวรรณภูมิ', 'มหาวิทยาลัยกรุงเทพ', 'มหาวิทยาลัยอัสสัมชัญ',
+    'มหาวิทยาลัยรังสิต', 'มหาวิทยาลัยศรีปทุม', 'มหาวิทยาลัยหอการค้าไทย', 'มหาวิทยาลัยสยาม', 'มหาวิทยาลัยธุรกิจบัณฑิตย์', 'มหาวิทยาลัยเทคโนโลยีมหานคร',
+    'สถาบันเทคโนโลยีไทย-ญี่ปุ่น', 'สถาบันการจัดการปัญญาภิวัฒน์'],
+  faculty: ['แพทยศาสตร์', 'ทันตแพทยศาสตร์', 'เภสัชศาสตร์', 'พยาบาลศาสตร์', 'สัตวแพทยศาสตร์', 'สหเวชศาสตร์', 'สาธารณสุขศาสตร์', 'วิศวกรรมศาสตร์', 'วิทยาศาสตร์',
+    'เทคโนโลยีสารสนเทศ', 'สถาปัตยกรรมศาสตร์', 'ครุศาสตร์', 'ศึกษาศาสตร์', 'อักษรศาสตร์', 'ศิลปศาสตร์', 'มนุษยศาสตร์', 'นิติศาสตร์', 'รัฐศาสตร์', 'เศรษฐศาสตร์',
+    'บริหารธุรกิจ', 'พาณิชยศาสตร์และการบัญชี', 'นิเทศศาสตร์', 'จิตวิทยา', 'ศิลปกรรมศาสตร์', 'ดุริยางคศาสตร์', 'เกษตรศาสตร์', 'วิทยาการจัดการ', 'การท่องเที่ยวและการโรงแรม', 'โลจิสติกส์'],
+  province: ['กรุงเทพมหานคร', 'กระบี่', 'กาญจนบุรี', 'กาฬสินธุ์', 'กำแพงเพชร', 'ขอนแก่น', 'จันทบุรี', 'ฉะเชิงเทรา', 'ชลบุรี', 'ชัยนาท', 'ชัยภูมิ', 'ชุมพร', 'เชียงราย',
+    'เชียงใหม่', 'ตรัง', 'ตราด', 'ตาก', 'นครนายก', 'นครปฐม', 'นครพนม', 'นครราชสีมา', 'นครศรีธรรมราช', 'นครสวรรค์', 'นนทบุรี', 'นราธิวาส', 'น่าน', 'บึงกาฬ', 'บุรีรัมย์',
+    'ปทุมธานี', 'ประจวบคีรีขันธ์', 'ปราจีนบุรี', 'ปัตตานี', 'พระนครศรีอยุธยา', 'พะเยา', 'พังงา', 'พัทลุง', 'พิจิตร', 'พิษณุโลก', 'เพชรบุรี', 'เพชรบูรณ์', 'แพร่',
+    'ภูเก็ต', 'มหาสารคาม', 'มุกดาหาร', 'แม่ฮ่องสอน', 'ยโสธร', 'ยะลา', 'ร้อยเอ็ด', 'ระนอง', 'ระยอง', 'ราชบุรี', 'ลพบุรี', 'ลำปาง', 'ลำพูน', 'เลย', 'ศรีสะเกษ', 'สกลนคร',
+    'สงขลา', 'สตูล', 'สมุทรปราการ', 'สมุทรสงคราม', 'สมุทรสาคร', 'สระแก้ว', 'สระบุรี', 'สิงห์บุรี', 'สุโขทัย', 'สุพรรณบุรี', 'สุราษฎร์ธานี', 'สุรินทร์', 'หนองคาย',
+    'หนองบัวลำภู', 'อ่างทอง', 'อำนาจเจริญ', 'อุดรธานี', 'อุตรดิตถ์', 'อุทัยธานี', 'อุบลราชธานี', 'ต่างประเทศ'],
+  career: ['แพทย์', 'ทันตแพทย์', 'เภสัชกร', 'พยาบาล', 'สัตวแพทย์', 'นักกายภาพบำบัด', 'วิศวกร', 'สถาปนิก', 'โปรแกรมเมอร์/นักพัฒนาซอฟต์แวร์', 'นักวิทยาศาสตร์',
+    'ครู/อาจารย์', 'นักบัญชี', 'นักการเงิน/การธนาคาร', 'นักธุรกิจ/ผู้ประกอบการ', 'นักการตลาด', 'ทนายความ/นักกฎหมาย', 'ข้าราชการ', 'ทหาร', 'ตำรวจ', 'นักบิน',
+    'พนักงานต้อนรับบนเครื่องบิน', 'มัคคุเทศก์/การท่องเที่ยว', 'นักออกแบบ/กราฟิกดีไซเนอร์', 'นักแปล/ล่าม', 'นักข่าว/สื่อสารมวลชน', 'นักจิตวิทยา', 'เชฟ/ธุรกิจอาหาร',
+    'อินฟลูเอนเซอร์/ครีเอเตอร์', 'นักกีฬา', 'นักดนตรี/ศิลปิน', 'ยังไม่แน่ใจ']
 };
 const BAR_COLORS = ['#e6007e', '#7c3aed', '#0891b2', '#059669', '#d97706'];
 
@@ -499,7 +533,8 @@ function renderList() {
 
 /* ════════════ form ════════════ */
 function blankAnswers(g) {
-  return g === 6 ? { exams: [], tpat: [], alevel: [], otherText: '', target: '' }
+  return g === 6 ? { status: '', uni: '', faculty: '', major: '', province: '', job: '', workplace: '',
+      exams: [], tpat: [], alevel: [], otherText: '', target: '', career: '' }
     : { subjects: [], subjectOther: '', goals: [], goalOther: '', dream: '', note: '' };
 }
 async function openStudent(k) {
@@ -514,27 +549,51 @@ async function openStudent(k) {
   }
   renderForm(); show('form');
 }
-const optCards = (group, opts, big) => `<div class="opt-grid">${opts.map(o =>
-  `<button type="button" class="opt ${big ? 'big' : ''} ${S.answers[group].includes(o.v) ? 'on' : ''}" data-group="${group}" data-v="${esc(o.v)}">
+/** ตรวจว่าเลือกค่า v ในกลุ่มนั้นหรือยัง (รองรับทั้งเลือกได้หลายข้อ และเลือกข้อเดียว) */
+const has = (group, v) => { const x = S.answers[group]; return Array.isArray(x) ? x.includes(v) : x === v; };
+const optCards = (group, opts, big, single) => `<div class="opt-grid">${opts.map(o =>
+  `<button type="button" class="opt ${big ? 'big' : ''} ${single ? 'single' : ''} ${has(group, o.v) ? 'on' : ''}" data-group="${group}" data-v="${esc(o.v)}" ${single ? 'data-single="1"' : ''}>
     <span class="opt-ic">${o.i || '•'}</span><span class="opt-txt"><b>${esc(o.t || o.v)}</b>${o.d ? `<small>${esc(o.d)}</small>` : ''}</span><span class="tick">✓</span></button>`).join('')}</div>`;
 const chips = (group, opts) => `<div class="chips">${opts.map(o =>
-  `<button type="button" class="chip-opt ${S.answers[group].includes(o.v) ? 'on' : ''}" data-group="${group}" data-v="${esc(o.v)}">${o.i ? `<span class="ci">${o.i}</span>` : ''}${esc(o.t || o.v)}</button>`).join('')}</div>`;
+  `<button type="button" class="chip-opt ${has(group, o.v) ? 'on' : ''}" data-group="${group}" data-v="${esc(o.v)}">${o.i ? `<span class="ci">${o.i}</span>` : ''}${esc(o.t || o.v)}</button>`).join('')}</div>`;
 const sub = (group, v, title, inner) => `<div class="sub" data-dep="${group}" data-dep-v="${esc(v)}"><div class="sub-title">${title}</div>${inner}</div>`;
-const field = (f, ph, max, area) => area
+const field = (f, ph, max, area, list) => area
   ? `<textarea class="inp" rows="3" data-field="${f}" maxlength="${max}" placeholder="${esc(ph)}">${esc(S.answers[f])}</textarea>`
-  : `<input class="inp" data-field="${f}" maxlength="${max}" placeholder="${esc(ph)}" value="${esc(S.answers[f])}">`;
+  : `<input class="inp" data-field="${f}" maxlength="${max}" placeholder="${esc(ph)}" value="${esc(S.answers[f])}" ${list ? `list="dl-${list}"` : ''} autocomplete="off">`;
+const lab = (label, req, inner) => `<label class="fl"><span>${label}${req ? ' <span class="req">*</span>' : ''}</span>${inner}</label>`;
+const datalists = () => Object.keys(DL).map(k => `<datalist id="dl-${k}">${DL[k].map(v => `<option value="${esc(v)}">`).join('')}</datalist>`).join('');
 const qBox = (id, no, title, hint, inner) => `<div class="q glass" id="${id}"><div class="q-head"><div class="q-no">${no}</div><div><div class="q-title">${title}</div><div class="q-hint">${hint}</div></div></div>${inner}</div>`;
 
 function renderForm() {
   const s = S.student, cfg = S.data.config, SV = S.data.survey;
   let body = '', n = 1;
   if (s.g === 6) {
-    body += qBox('q-exams', n++, 'นักเรียนจะสอบอะไรบ้าง? <span class="req">*</span>', 'เลือกได้มากกว่า 1 ข้อ',
-      optCards('exams', SV.m6.exams, true) +
-      sub('exams', 'TGAT/TPAT', '🧠 จะสอบ TGAT / TPAT ส่วนไหนบ้าง <small style="color:var(--muted);font-weight:400">(ไม่บังคับ)</small>', chips('tpat', SV.m6.tpat)) +
-      sub('exams', 'A-Level', '📚 จะสอบ A-Level วิชาอะไรบ้าง <small style="color:var(--muted);font-weight:400">(ไม่บังคับ)</small>', chips('alevel', SV.m6.alevel)) +
-      sub('exams', OTHER, '✍️ โปรดระบุการสอบอื่นๆ <span class="req">*</span>', field('otherText', 'เช่น สอบตรงคณะ…, โควตา…, สอบชิงทุน…, IELTS', 300, true)));
-    body += qBox('q-target', n++, 'คณะ / มหาวิทยาลัยที่ตั้งเป้าไว้', 'ไม่บังคับ — ถ้ายังไม่แน่ใจเว้นว่างได้', field('target', 'เช่น วิศวกรรมศาสตร์ มหาวิทยาลัย…', 200));
+    const opt = '<small style="color:var(--muted);font-weight:400">(ไม่บังคับ)</small>';
+    body += qBox('q-status', n++, 'ตอนนี้นักเรียนติดมหาวิทยาลัยแล้วหรือยัง? <span class="req">*</span>', 'เลือก 1 ข้อ',
+      optCards('status', SV.m6.status, true, true) +
+      sub('status', ADMIT, '🎉 ยินดีด้วย! ติดที่ไหน',
+        `<div class="f-grid">
+          ${lab('มหาวิทยาลัย', true, field('uni', 'เช่น มหาวิทยาลัยเกษตรศาสตร์', 150, false, 'uni'))}
+          ${lab('คณะ', true, field('faculty', 'เช่น วิศวกรรมศาสตร์', 150, false, 'faculty'))}
+          ${lab('สาขา ' + opt, false, field('major', 'เช่น วิศวกรรมคอมพิวเตอร์', 150))}
+          ${lab('จังหวัด', true, field('province', 'เช่น กรุงเทพมหานคร', 80, false, 'province'))}
+        </div>`) +
+      sub('status', WORK, '💼 นักเรียนประสงค์จะทำงาน',
+        `<div class="f-grid">
+          ${lab('งานอะไร', true, field('job', 'เช่น ช่วยกิจการที่บ้าน, พนักงานบริษัท…', 200))}
+          ${lab('ที่ไหน', true, field('workplace', 'เช่น ร้าน/บริษัท…, เขต/จังหวัด…', 200))}
+        </div>`));
+    body += `<div class="qdep" data-dep="status" data-dep-v="${esc(WAIT)}">` +
+      qBox('q-exams', 0, 'นักเรียนจะสอบอะไรบ้าง? <span class="req">*</span>', 'เลือกได้มากกว่า 1 ข้อ',
+        optCards('exams', SV.m6.exams, true) +
+        sub('exams', 'TGAT/TPAT', '🧠 จะสอบ TGAT / TPAT ส่วนไหนบ้าง ' + opt, chips('tpat', SV.m6.tpat)) +
+        sub('exams', 'A-Level', '📚 จะสอบ A-Level วิชาอะไรบ้าง ' + opt, chips('alevel', SV.m6.alevel)) +
+        sub('exams', OTHER, '✍️ โปรดระบุการสอบอื่นๆ <span class="req">*</span>', field('otherText', 'เช่น สอบตรงคณะ…, โควตา…, สอบชิงทุน…, IELTS', 300, true))) +
+      qBox('q-target', 0, 'คณะ / มหาวิทยาลัยที่ตั้งเป้าไว้', 'ไม่บังคับ — ถ้ายังไม่แน่ใจเว้นว่างได้', field('target', 'เช่น วิศวกรรมศาสตร์ มหาวิทยาลัย…', 200)) +
+      `</div>`;
+    body += qBox('q-career', 0, 'อาชีพที่นักเรียนอยากเป็นในอนาคต <span class="req">*</span>', 'พิมพ์เองหรือเลือกจากรายการ · ถ้ายังไม่แน่ใจ พิมพ์ “ยังไม่แน่ใจ”',
+      field('career', 'เช่น วิศวกร, ครู, นักบัญชี…', 200, false, 'career'));
+    body += datalists();
   } else {
     body += qBox('q-subjects', n++, 'นักเรียนอยากเน้นวิชาอะไรเป็นพิเศษ? <span class="req">*</span>', 'เลือกได้มากกว่า 1 วิชา',
       chips('subjects', SV.m45.subjects) + sub('subjects', OTHER, '➕ โปรดระบุวิชาอื่นๆ <span class="req">*</span>', field('subjectOther', 'เช่น ภาษาอาเซียน, ทักษะการพูด…', 200)));
@@ -547,7 +606,7 @@ function renderForm() {
     `<input class="inp" id="sidInp" inputmode="numeric" maxlength="20" placeholder="รหัสนักเรียน" autocomplete="off">`);
 
   $('#v-form').innerHTML = `
-    <div class="page-head"><button class="back" data-back>← กลับ</button><div><h2>${s.g === 6 ? '🎯 แบบสำรวจการสอบ' : GRADE_META[s.g].icon + ' แบบสำรวจวิชาที่อยากเน้น'}</h2><div class="sub-t">ม.${s.g} · ตอบตามความจริงเพื่อประโยชน์ของนักเรียนเอง</div></div></div>
+    <div class="page-head"><button class="back" data-back>← กลับ</button><div><h2>${s.g === 6 ? '🎯 แบบสำรวจการศึกษาต่อ ม.6' : GRADE_META[s.g].icon + ' แบบสำรวจวิชาที่อยากเน้น'}</h2><div class="sub-t">ม.${s.g} · ตอบตามความจริงเพื่อประโยชน์ของนักเรียนเอง</div></div></div>
     <div class="stu-card glass"><div class="avatar xl">${esc(initial(s.name))}</div><div><div class="stu-name">${esc(s.name)}</div><div class="stu-meta">ชั้น ม.${s.g}/${s.r}${s.n ? ' · เลขที่ ' + esc(s.n) : ''}</div></div>
       ${s.d ? '<span class="chip ok">✓ เคยส่งแล้ว · ส่งใหม่เพื่อแก้ไข</span>' : ''}</div>
     ${s.d && cfg.requireId ? '<div class="note-banner">ℹ️ นักเรียนเคยส่งแล้ว การส่งครั้งนี้จะแทนที่คำตอบเดิม</div>' : ''}
@@ -558,9 +617,15 @@ function renderForm() {
   $('[data-back]', root).onclick = () => { if (S.room) { renderList(); show('list'); } else { renderHome(); show('home'); } };
   $('#formBody').onclick = e => {
     const b = e.target.closest('[data-v]'); if (!b) return;
-    const arr = S.answers[b.dataset.group], v = b.dataset.v, i = arr.indexOf(v);
-    if (i > -1) arr.splice(i, 1); else arr.push(v);
-    b.classList.toggle('on', i === -1);
+    const g = b.dataset.group, v = b.dataset.v;
+    if (b.dataset.single) {
+      S.answers[g] = v;
+      $$(`[data-group="${g}"]`, root).forEach(x => x.classList.toggle('on', x.dataset.v === v));
+    } else {
+      const arr = S.answers[g], i = arr.indexOf(v);
+      if (i > -1) arr.splice(i, 1); else arr.push(v);
+      b.classList.toggle('on', i === -1);
+    }
     updateDeps();
   };
   $('#formBody').oninput = e => {
@@ -571,15 +636,29 @@ function renderForm() {
   updateDeps();
 }
 function updateDeps() {
-  $$('.sub', $('#v-form')).forEach(el => el.classList.toggle('open', S.answers[el.dataset.dep].includes(el.dataset.depV)));
-  const A = S.answers, cnt = S.student.g === 6 ? A.exams.length + A.tpat.length + A.alevel.length : A.subjects.length + A.goals.length;
+  const root = $('#v-form');
+  $$('[data-dep]', root).forEach(el => el.classList.toggle('open', has(el.dataset.dep, el.dataset.depV)));
+  let n = 0;   // เรียงเลขข้อใหม่ตามข้อที่แสดงอยู่
+  $$('.q', root).forEach(q => { if (!q.closest('.qdep:not(.open)')) $('.q-no', q).textContent = ++n; });
+  const A = S.answers, cnt = S.student.g === 6 ? (A.status ? 1 : 0) + A.exams.length + A.tpat.length + A.alevel.length : A.subjects.length + A.goals.length;
   $('#selCnt').textContent = cnt;
 }
 function validate() {
   const A = S.answers, s = S.student;
   if (s.g === 6) {
-    if (!A.exams.length) return { msg: 'กรุณาเลือกการสอบอย่างน้อย 1 รายการ', sel: '#q-exams' };
-    if (A.exams.includes(OTHER) && !A.otherText.trim()) return { msg: 'กรุณาระบุการสอบอื่นๆ', sel: '#q-exams' };
+    if (!A.status) return { msg: 'กรุณาเลือกว่าติดมหาวิทยาลัยแล้วหรือยัง', sel: '#q-status' };
+    if (A.status === ADMIT) {
+      if (!A.uni.trim()) return { msg: 'กรุณากรอกชื่อมหาวิทยาลัยที่ติด', sel: '#q-status' };
+      if (!A.faculty.trim()) return { msg: 'กรุณากรอกคณะที่ติด', sel: '#q-status' };
+      if (!A.province.trim()) return { msg: 'กรุณากรอกจังหวัดของมหาวิทยาลัย', sel: '#q-status' };
+    } else if (A.status === WORK) {
+      if (!A.job.trim()) return { msg: 'กรุณาระบุงานที่จะทำ', sel: '#q-status' };
+      if (!A.workplace.trim()) return { msg: 'กรุณาระบุสถานที่ทำงาน', sel: '#q-status' };
+    } else {
+      if (!A.exams.length) return { msg: 'กรุณาเลือกการสอบอย่างน้อย 1 รายการ', sel: '#q-exams' };
+      if (A.exams.includes(OTHER) && !A.otherText.trim()) return { msg: 'กรุณาระบุการสอบอื่นๆ', sel: '#q-exams' };
+    }
+    if (!A.career.trim()) return { msg: 'กรุณาระบุอาชีพที่อยากเป็น', sel: '#q-career' };
   } else {
     if (!A.subjects.length) return { msg: 'กรุณาเลือกวิชาที่อยากเน้นอย่างน้อย 1 วิชา', sel: '#q-subjects' };
     if (A.subjects.includes(OTHER) && !A.subjectOther.trim()) return { msg: 'กรุณาระบุวิชาอื่นๆ', sel: '#q-subjects' };
@@ -613,11 +692,23 @@ function renderDone(res) {
   const row = (k, v) => `<div class="sum-row"><div class="k">${k}</div><div class="v">${v}</div></div>`;
   let sum = '';
   if (s.g === 6) {
-    sum += row('การสอบที่เลือก', tags(a.exams));
-    if (a.tpat && a.tpat.length) sum += row('TGAT / TPAT', tags(a.tpat));
-    if (a.alevel && a.alevel.length) sum += row('A-Level', tags(a.alevel));
-    if (a.otherText) sum += row('การสอบอื่นๆ', esc(a.otherText));
-    if (a.target) sum += row('คณะ/มหาวิทยาลัยที่ตั้งเป้า', esc(a.target));
+    const stOpt = S.data.survey.m6.status.find(o => o.v === a.status);
+    sum += row('สถานะการศึกษาต่อ', tags([stOpt ? stOpt.t : a.status]));
+    if (a.status === ADMIT) {
+      sum += row('มหาวิทยาลัย', esc(a.uni));
+      sum += row('คณะ / สาขา', 'คณะ' + esc(a.faculty) + (a.major ? ' · สาขา' + esc(a.major) : ''));
+      sum += row('จังหวัด', esc(a.province));
+    } else if (a.status === WORK) {
+      sum += row('งานที่จะทำ', esc(a.job));
+      sum += row('สถานที่ทำงาน', esc(a.workplace));
+    } else {
+      sum += row('การสอบที่เลือก', tags(a.exams));
+      if (a.tpat && a.tpat.length) sum += row('TGAT / TPAT', tags(a.tpat));
+      if (a.alevel && a.alevel.length) sum += row('A-Level', tags(a.alevel));
+      if (a.otherText) sum += row('การสอบอื่นๆ', esc(a.otherText));
+      if (a.target) sum += row('คณะ/มหาวิทยาลัยที่ตั้งเป้า', esc(a.target));
+    }
+    sum += row('อาชีพที่อยากเป็น', esc(a.career));
   } else {
     sum += row('วิชาที่อยากเน้น', tags(a.subjects) + (a.subjectOther ? ` <span class="tagv">${esc(a.subjectOther)}</span>` : ''));
     sum += row('เป้าหมาย', tags(a.goals) + (a.goalOther ? ` <span class="tagv">${esc(a.goalOther)}</span>` : ''));
@@ -626,7 +717,7 @@ function renderDone(res) {
   $('#v-done').innerHTML = `<div class="done-wrap glass">
     <div class="check"><svg viewBox="0 0 52 52"><path d="M14 27 l8 8 l16 -18"/></svg></div>
     <h2>${res.edited ? 'แก้ไขคำตอบเรียบร้อย!' : 'ส่งแบบสำรวจเรียบร้อย!'}</h2>
-    <p style="color:var(--muted)">ขอบคุณ <b style="color:var(--text)">${esc(s.name)}</b> ม.${s.g}/${s.r} 💖<br>ขอให้ประสบความสำเร็จตามเป้าหมายนะ</p>
+    <p style="color:var(--muted)">ขอบคุณ <b style="color:var(--text)">${esc(s.name)}</b> ม.${s.g}/${s.r} 💖<br>${a.status === ADMIT ? 'ยินดีด้วยกับก้าวใหม่ในรั้วมหาวิทยาลัย 🎓' : 'ขอให้ประสบความสำเร็จตามเป้าหมายนะ'}</p>
     <div class="sum">${sum}</div>
     <button class="btn" id="homeBtn">กลับหน้าแรก</button></div>`;
   $('#homeBtn').onclick = () => { S.room = null; renderHome(); show('home'); };
@@ -683,9 +774,10 @@ function bars(sec, ci) {
 }
 function textTable(X, g) {
   if (!X.rows.length) return '';
+  const cols = X.cols || ['คำตอบ'];
   return `<h3>${esc(X.title)} <small style="color:#6b6188;font-weight:400">(${X.rows.length} คน)</small></h3>
-    <table class="rt"><tr><th style="width:80px">ห้อง</th><th style="width:60px">เลขที่</th><th style="width:30%">ชื่อ-นามสกุล</th><th>คำตอบ</th></tr>
-    ${X.rows.map(r => `<tr><td>ม.${g}/${r.room}</td><td>${esc(r.n)}</td><td>${esc(r.name)}</td><td>${esc(r.text)}</td></tr>`).join('')}</table>`;
+    <div class="tbl-wrap"><table class="rt"><tr><th style="width:70px">ห้อง</th><th style="width:54px">เลขที่</th><th>ชื่อ-นามสกุล</th>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>
+    ${X.rows.map(r => `<tr><td>ม.${g}/${r.room}</td><td>${esc(r.n)}</td><td>${esc(r.name)}</td>${(r.cells || [r.text]).map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`;
 }
 function renderReport() {
   const R = S.report, gs = R.grades.filter(G => S.repG.has(G.g));
@@ -694,16 +786,16 @@ function renderReport() {
   const dt = new Date(R.generatedAt).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
   const tg = [4, 5, 6].filter(g => R.grades.some(G => G.g === g)).map(g => `<button class="tg ${S.repG.has(g) ? 'on' : ''}" data-tg="${g}">ม.${g}</button>`).join('');
 
-  let rate = `<table class="rt"><tr><th>ชั้น/ห้อง</th><th>นักเรียน</th><th>ตอบแล้ว</th><th>ยังไม่ตอบ</th><th>ร้อยละ</th><th style="width:28%"></th></tr>`;
+  let rate = `<div class="tbl-wrap"><table class="rt"><tr><th>ชั้น/ห้อง</th><th>นักเรียน</th><th>ตอบแล้ว</th><th>ยังไม่ตอบ</th><th>ร้อยละ</th><th style="width:28%"></th></tr>`;
   gs.forEach(G => {
     G.rooms.forEach(r => rate += `<tr><td>ม.${G.g}/${r.r}</td><td>${r.total}</td><td>${r.done}</td><td>${r.total - r.done}</td><td>${pct(r.done, r.total)}%</td><td><div class="mini-bar"><i style="width:${pct(r.done, r.total)}%"></i></div></td></tr>`);
     rate += `<tr class="tot"><td>รวม ม.${G.g}</td><td>${G.total}</td><td>${G.done}</td><td>${G.total - G.done}</td><td>${pct(G.done, G.total)}%</td><td><div class="mini-bar"><i style="width:${pct(G.done, G.total)}%"></i></div></td></tr>`;
   });
-  rate += `</table>`;
+  rate += `</table></div>`;
 
   let secs = '';
   gs.slice().sort((a, b) => b.g - a.g).forEach((G, gi) => {
-    secs += `<section class="rp-sec ${gi === 0 ? '' : 'pb'}"><h2><span class="gbadge">ม.${G.g}</span> ${G.g === 6 ? 'การสอบเข้ามหาวิทยาลัย' : 'วิชาที่ต้องการเน้นและเป้าหมาย'}</h2>
+    secs += `<section class="rp-sec ${gi === 0 ? '' : 'pb'}"><h2><span class="gbadge">ม.${G.g}</span> ${G.g === 6 ? 'การศึกษาต่อ การสอบ และอาชีพ' : 'วิชาที่ต้องการเน้นและเป้าหมาย'}</h2>
       <div class="rp-note">ผู้ตอบ ${G.done} จาก ${G.total} คน (${pct(G.done, G.total)}%) · ร้อยละคิดจากจำนวนผู้ตอบ · นักเรียน 1 คนเลือกได้หลายข้อ</div>
       ${G.sections.map((s, i) => `<h3>${i + 1}. ${esc(s.title)}</h3>${s.note ? `<div class="rp-note">${esc(s.note)} (${s.base} คน)</div>` : ''}${bars(s, i + gi)}`).join('')}
       ${G.texts.map(X => textTable(X, G.g)).join('')}</section>`;
