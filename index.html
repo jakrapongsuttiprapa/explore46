@@ -606,7 +606,7 @@ function renderForm() {
     `<input class="inp" id="sidInp" inputmode="numeric" maxlength="20" placeholder="รหัสนักเรียน" autocomplete="off">`);
 
   $('#v-form').innerHTML = `
-    <div class="page-head"><button class="back" data-back>← กลับ</button><div><h2>${s.g === 6 ? '🎯 แบบสำรวจการศึกษาต่อ ม.6' : GRADE_META[s.g].icon + ' แบบสำรวจวิชาที่อยากเน้น'}</h2><div class="sub-t">ม.${s.g} · ตอบตามความจริงเพื่อประโยชน์ของนักเรียนเอง</div></div></div>
+    <div class="page-head"><button class="back" data-back>← กลับ</button><div><h2>${s.g === 6 ? '🎯 แบบสำรวจการสอบ' : GRADE_META[s.g].icon + ' แบบสำรวจวิชาที่อยากเน้น'}</h2><div class="sub-t">ม.${s.g} · ตอบตามความจริงเพื่อประโยชน์ของนักเรียนเอง</div></div></div>
     <div class="stu-card glass"><div class="avatar xl">${esc(initial(s.name))}</div><div><div class="stu-name">${esc(s.name)}</div><div class="stu-meta">ชั้น ม.${s.g}/${s.r}${s.n ? ' · เลขที่ ' + esc(s.n) : ''}</div></div>
       ${s.d ? '<span class="chip ok">✓ เคยส่งแล้ว · ส่งใหม่เพื่อแก้ไข</span>' : ''}</div>
     ${s.d && cfg.requireId ? '<div class="note-banner">ℹ️ นักเรียนเคยส่งแล้ว การส่งครั้งนี้จะแทนที่คำตอบเดิม</div>' : ''}
@@ -786,12 +786,12 @@ function renderReport() {
   const dt = new Date(R.generatedAt).toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' });
   const tg = [4, 5, 6].filter(g => R.grades.some(G => G.g === g)).map(g => `<button class="tg ${S.repG.has(g) ? 'on' : ''}" data-tg="${g}">ม.${g}</button>`).join('');
 
-  let rate = `<div class="tbl-wrap"><table class="rt"><tr><th>ชั้น/ห้อง</th><th>นักเรียน</th><th>ตอบแล้ว</th><th>ยังไม่ตอบ</th><th>ร้อยละ</th><th style="width:28%"></th></tr>`;
+  let rate = `<table class="rt"><tr><th>ชั้น/ห้อง</th><th>นักเรียน</th><th>ตอบแล้ว</th><th>ยังไม่ตอบ</th><th>ร้อยละ</th><th style="width:28%"></th></tr>`;
   gs.forEach(G => {
     G.rooms.forEach(r => rate += `<tr><td>ม.${G.g}/${r.r}</td><td>${r.total}</td><td>${r.done}</td><td>${r.total - r.done}</td><td>${pct(r.done, r.total)}%</td><td><div class="mini-bar"><i style="width:${pct(r.done, r.total)}%"></i></div></td></tr>`);
     rate += `<tr class="tot"><td>รวม ม.${G.g}</td><td>${G.total}</td><td>${G.done}</td><td>${G.total - G.done}</td><td>${pct(G.done, G.total)}%</td><td><div class="mini-bar"><i style="width:${pct(G.done, G.total)}%"></i></div></td></tr>`;
   });
-  rate += `</table></div>`;
+  rate += `</table>`;
 
   let secs = '';
   gs.slice().sort((a, b) => b.g - a.g).forEach((G, gi) => {
